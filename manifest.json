@@ -1,0 +1,17 @@
+{
+  "name": "Løpekalkulator",
+  "short_name": "Løpekalkulator",
+  "description": "Beregn fart, tempo og tid for løpeturer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3a0840",
+  "theme_color": "#3a0840",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

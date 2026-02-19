@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <!-- Background gradient: deep purple to medium purple -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a0840"/>
+      <stop offset="100%" stop-color="#7f3089"/>
+    </linearGradient>
+
+    <!-- Soft inner highlight (top-left gloss) -->
+    <radialGradient id="gloss" cx="30%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.14)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+
+    <!-- Subtle white glow behind the figure -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Clip to rounded square -->
+    <clipPath id="clip">
+      <rect width="64" height="64" rx="14"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Gloss overlay -->
+  <rect width="64" height="64" rx="14" fill="url(#gloss)"/>
+
+  <!-- Subtle circular track arc -->
+  <circle cx="40" cy="36" r="27"
+          fill="none"
+          stroke="rgba(255,255,255,0.09)"
+          stroke-width="5"
+          clip-path="url(#clip)"/>
+
+  <!-- Motion / speed lines (left side) -->
+  <g stroke="white" stroke-linecap="round">
+    <line x1="5"  y1="24" x2="21" y2="24" stroke-width="2.4" opacity="0.32"/>
+    <line x1="3"  y1="32" x2="17" y2="32" stroke-width="1.9" opacity="0.24"/>
+    <line x1="5"  y1="40" x2="19" y2="40" stroke-width="1.5" opacity="0.18"/>
+  </g>
+
+  <!-- Runner — with soft glow filter for a polished look -->
+  <g filter="url(#glow)" stroke="white" stroke-linecap="round" stroke-linejoin="round" fill="none">
+
+    <!-- Head -->
+    <circle cx="45" cy="12" r="5.5" fill="white" stroke="none"/>
+
+    <!-- Torso: leaning forward, neck to hip -->
+    <path d="M 43 18 C 41 25 38 31 34 38" stroke-width="3.8"/>
+
+    <!-- Front arm: from shoulder reaching up-left (forward stride) -->
+    <path d="M 39 23 C 33 20 27 18 22 17" stroke-width="3.1"/>
+
+    <!-- Back arm: from shoulder swinging down-right -->
+    <path d="M 40 25 C 45 31 49 37 51 42" stroke-width="3.1"/>
+
+    <!-- Front leg: hip to foot, striding forward-down -->
+    <path d="M 35 38 C 29 45 24 51 19 58" stroke-width="3.8"/>
+
+    <!-- Back leg: hip pushing off, angling right-down -->
+    <path d="M 34 38 C 41 44 47 49 53 53" stroke-width="3.8"/>
+
+  </g>
+</svg>

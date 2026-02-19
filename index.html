@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Løpekalkulator</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#3a0840">
+  <meta name="description" content="Beregn fart, tempo og tid for løpeturer">
   <style>
     :root {
       --purple-900: #2d0830;
@@ -338,7 +343,18 @@
 <div class="card">
 
   <div class="header">
-    <div class="header-icon">🏃</div>
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="28" height="28">
+        <g filter="url(#glow)" stroke="white" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <circle cx="45" cy="12" r="5.5" fill="white" stroke="none"/>
+          <path d="M 43 18 C 41 25 38 31 34 38" stroke-width="3.8"/>
+          <path d="M 39 23 C 33 20 27 18 22 17" stroke-width="3.1"/>
+          <path d="M 40 25 C 45 31 49 37 51 42" stroke-width="3.1"/>
+          <path d="M 35 38 C 29 45 24 51 19 58" stroke-width="3.8"/>
+          <path d="M 34 38 C 41 44 47 49 53 53" stroke-width="3.8"/>
+        </g>
+      </svg>
+    </div>
     <div class="header-text">
       <h1>Løpekalkulator</h1>
       <p>Fyll inn to felt — det tredje beregnes automatisk</p>
