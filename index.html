@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Løpekalkulator</title>
+  <style>
+    :root {
+      --purple-900: #2d0830;
+      --purple-700: #5b1a63;
+      --purple-500: #8b3d96;
+      --purple-200: #dbb8ff;
+      --purple-100: #eddeff;
+      --purple-50:  #f7f0ff;
+      --text:       #1a0520;
+      --muted:      #7a5c84;
+      --border:     #e4cff0;
+      --card:       #ffffff;
+      --radius-sm:  10px;
+      --radius-md:  16px;
+      --radius-lg:  20px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--purple-50);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.25rem 1rem;
+      padding-top: max(1.5rem, env(safe-area-inset-top));
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+
+    @media (min-width: 480px) {
+      body { align-items: center; padding: 2rem; }
+    }
+
+    /* ── Card ──────────────────────────────────────────────────────────────── */
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 1.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 2px 8px rgba(45,8,48,0.06), 0 8px 40px rgba(45,8,48,0.10);
+    }
+
+    @media (min-width: 480px) {
+      .card { padding: 2.25rem 2rem; }
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────────── */
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .header-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.25rem;
+    }
+
+    .header-text h1 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .header-text p {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+
+    /* ── Fields ────────────────────────────────────────────────────────────── */
+
+    .fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .field-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .calc-badge {
+      display: none;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--purple-700);
+      background: var(--purple-100);
+      border-radius: var(--radius-pill);
+      padding: 0.15rem 0.6rem;
+    }
+
+    .field.is-calculated .calc-badge { display: inline-flex; }
+
+    /* ── Input row ─────────────────────────────────────────────────────────── */
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-row:focus-within {
+      border-color: var(--purple-500);
+      box-shadow: 0 0 0 3px rgba(139,61,150,0.12);
+    }
+
+    .input-row.calculated {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+    }
+
+    .input-row.calculated input { color: var(--purple-700); }
+
+    input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0.875rem 1rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      min-width: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input::placeholder {
+      color: #d4c0dc;
+      font-weight: 400;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Pace split */
+    .pace-wrap {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pace-wrap input { text-align: center; }
+
+    #pace-min { flex: 0 0 3.5rem; padding-right: 0.25rem; }
+    #pace-sec { flex: 0 0 3.5rem; padding-left: 0.25rem; }
+
+    .pace-sep {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--muted);
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .calculated .pace-sep { color: var(--purple-500); }
+
+    .unit {
+      padding: 0 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      border-left: 1.5px solid var(--border);
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .calculated .unit {
+      border-left-color: var(--purple-200);
+      color: var(--purple-500);
+    }
+
+    /* ── Distance preset pills ─────────────────────────────────────────────── */
+
+    .preset-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.625rem;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      flex: 1 1 auto;
+      padding: 0.5rem 0.625rem;
+      background: var(--purple-50);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      text-align: center;
+    }
+
+    .preset-btn:hover {
+      background: var(--purple-100);
+      border-color: var(--purple-200);
+      color: var(--purple-700);
+    }
+
+    .preset-btn.active {
+      background: var(--purple-700);
+      border-color: var(--purple-700);
+      color: #fff;
+    }
+
+    /* ── Divider ───────────────────────────────────────────────────────────── */
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* ── Result card ───────────────────────────────────────────────────────── */
+
+    .result-card {
+      background: linear-gradient(135deg, var(--purple-900) 0%, var(--purple-700) 100%);
+      border-radius: var(--radius-md);
+      padding: 1.375rem 1.5rem;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      min-height: 5rem;
+    }
+
+    .result-left { flex: 1; }
+
+    .result-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      opacity: 0.65;
+    }
+
+    .result-value {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-top: 0.1rem;
+      line-height: 1;
+    }
+
+    .result-value.empty {
+      opacity: 0.25;
+      font-size: 1.75rem;
+    }
+
+    .result-meta {
+      font-size: 0.75rem;
+      opacity: 0.55;
+      margin-top: 0.35rem;
+    }
+
+    /* ── Reset button ──────────────────────────────────────────────────────── */
+
+    .reset-btn {
+      width: 100%;
+      margin-top: 0.875rem;
+      padding: 0.875rem;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-pill);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      letter-spacing: 0.01em;
+    }
+
+    .reset-btn:hover, .reset-btn:active {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+      color: var(--purple-700);
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="header">
+    <div class="header-icon">🏃</div>
+    <div class="header-text">
+      <h1>Løpekalkulator</h1>
+      <p>Fyll inn to felt — det tredje beregnes automatisk</p>
+    </div>
+  </div>
+
+  <div class="fields">
+
+    <div class="field" id="field-speed">
+      <div class="field-label-row">
+        <label>Fart</label>
+        <span class="calc-badge">beregnet</span>
+      </div>
+      <div class="input-row" id="row-speed">
+        <input type="number" id="speed" placeholder="10.0" min="0" step="0.1"
+               inputmode="decimal" autocomplete="off">
+        <span class="unit">km/t</span>
+      </div>
+    </div>
+
+    <div class="field" id="field-pace">
+      <div class="field-label-row">
+        <label>Tempo</label>
+        <span class="calc-badge">beregnet</span>
+      </div>
+      <div class="input-row" id="row-pace">
+        <div class="pace-wrap">
+          <input type="number" id="pace-min" placeholder="6" min="0" max="99"
+                 inputmode="numeric" autocomplete="off">
+          <span class="pace-sep">:</span>
+          <input type="number" id="pace-sec" placeholder="00" min="0" max="59"
+                 inputmode="numeric" autocomplete="off">
+        </div>
+        <span class="unit">min/km</span>
+      </div>
+    </div>
+
+    <div class="field" id="field-distance">
+      <div class="field-label-row">
+        <label>Distanse</label>
+        <span class="calc-badge">beregnet</span>
+      </div>
+      <div class="input-row" id="row-distance">
+        <input type="number" id="distance" placeholder="10.0" min="0" step="0.1"
+               inputmode="decimal" autocomplete="off">
+        <span class="unit">km</span>
+      </div>
+      <div class="preset-row">
+        <button class="preset-btn" data-km="5"        onclick="setPreset(this)">5 km</button>
+        <button class="preset-btn" data-km="10"       onclick="setPreset(this)">10 km</button>
+        <button class="preset-btn" data-km="21.0975"  onclick="setPreset(this)">Halvmaraton</button>
+        <button class="preset-btn" data-km="42.195"   onclick="setPreset(this)">Maraton</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="result-card">
+    <div class="result-left">
+      <div class="result-label">Total tid</div>
+      <div class="result-value empty" id="result-time">—</div>
+      <div class="result-meta" id="result-meta"></div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">Nullstill</button>
+
+</div>
+
+<script>
+  const speedEl   = document.getElementById('speed');
+  const paceMinEl = document.getElementById('pace-min');
+  const paceSecEl = document.getElementById('pace-sec');
+  const distEl    = document.getElementById('distance');
+  const timeEl    = document.getElementById('result-time');
+  const metaEl    = document.getElementById('result-meta');
+
+  let lastEdited    = null;
+  let activePreset  = null; // currently highlighted preset button
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  function getPaceDecimal() {
+    const m = parseInt(paceMinEl.value, 10);
+    const s = parseInt(paceSecEl.value, 10);
+    const minOk = !isNaN(m) && m >= 0;
+    const secOk = !isNaN(s) && s >= 0 && s < 60;
+    if (!minOk && !secOk) return NaN;
+    return (minOk ? m : 0) + (secOk ? s : 0) / 60;
+  }
+
+  function setPaceFromDecimal(dec) {
+    if (!isFinite(dec) || dec <= 0) { paceMinEl.value = ''; paceSecEl.value = ''; return; }
+    const min = Math.floor(dec);
+    let   sec = Math.round((dec - min) * 60);
+    if (sec === 60) { paceMinEl.value = String(min + 1); paceSecEl.value = '00'; }
+    else            { paceMinEl.value = String(min);     paceSecEl.value = String(sec).padStart(2, '0'); }
+  }
+
+  function formatTime(totalMin) {
+    if (!isFinite(totalMin) || totalMin <= 0) return null;
+    const h = Math.floor(totalMin / 60);
+    const m = Math.floor(totalMin % 60);
+    const s = Math.round((totalMin - Math.floor(totalMin)) * 60);
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function setCalculated(fieldId, isCalc) {
+    const fn = isCalc ? 'add' : 'remove';
+    document.getElementById('field-' + fieldId).classList[fn]('is-calculated');
+    document.getElementById('row-'   + fieldId).classList[fn]('calculated');
+  }
+
+  function clearPresets() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    activePreset = null;
+  }
+
+  // ── Preset buttons ────────────────────────────────────────────────────────────
+
+  function setPreset(btn) {
+    const km = parseFloat(btn.dataset.km);
+    distEl.value = km;
+    clearPresets();
+    btn.classList.add('active');
+    activePreset = btn;
+    lastEdited = 'distance';
+    calculate();
+  }
+
+  // ── Core calculation ─────────────────────────────────────────────────────────
+
+  function calculate() {
+    const speedRaw = parseFloat(speedEl.value);
+    const paceRaw  = getPaceDecimal();
+
+    const hasSpeed = !isNaN(speedRaw) && speedRaw > 0;
+    const hasPace  = !isNaN(paceRaw)  && paceRaw  > 0;
+
+    if (lastEdited === 'speed') {
+      if (hasSpeed) {
+        setPaceFromDecimal(60 / speedRaw);
+        setCalculated('pace',  true);
+        setCalculated('speed', false);
+      } else {
+        paceMinEl.value = '';
+        paceSecEl.value = '';
+        setCalculated('pace', false);
+      }
+      setCalculated('distance', false);
+
+    } else if (lastEdited === 'pace') {
+      if (hasPace) {
+        speedEl.value = (60 / paceRaw).toFixed(2);
+        setCalculated('speed', true);
+        setCalculated('pace',  false);
+      } else {
+        speedEl.value = '';
+        setCalculated('speed', false);
+      }
+      setCalculated('distance', false);
+
+    } else if (lastEdited === 'distance') {
+      setCalculated('distance', false);
+    }
+
+    // ── Total time ────────────────────────────────────────────────────────────
+    const currentPace  = getPaceDecimal();
+    const currentSpeed = parseFloat(speedEl.value);
+    const currentDist  = parseFloat(distEl.value);
+
+    const paceOk  = !isNaN(currentPace)  && currentPace  > 0;
+    const distOk  = !isNaN(currentDist)  && currentDist  > 0;
+    const speedOk = !isNaN(currentSpeed) && currentSpeed > 0;
+
+    if (paceOk && distOk) {
+      timeEl.textContent = formatTime(currentPace * currentDist);
+      timeEl.classList.remove('empty');
+      const sp = speedOk ? currentSpeed.toFixed(1) : (60 / currentPace).toFixed(1);
+      metaEl.textContent = `${currentDist % 1 === 0 ? currentDist.toFixed(0) : currentDist} km · ${sp} km/t`;
+    } else {
+      timeEl.textContent = '—';
+      timeEl.classList.add('empty');
+      metaEl.textContent = '';
+    }
+  }
+
+  // ── Event listeners ──────────────────────────────────────────────────────────
+
+  speedEl.addEventListener('input', () => { lastEdited = 'speed';    calculate(); });
+
+  distEl.addEventListener('input', () => {
+    lastEdited = 'distance';
+    clearPresets();
+    // Re-highlight if value matches a preset
+    const v = parseFloat(distEl.value);
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      if (Math.abs(parseFloat(b.dataset.km) - v) < 0.001) {
+        b.classList.add('active');
+        activePreset = b;
+      }
+    });
+    calculate();
+  });
+
+  paceMinEl.addEventListener('input', () => {
+    lastEdited = 'pace';
+    if (paceMinEl.value.length >= 2) paceSecEl.focus();
+    calculate();
+  });
+
+  paceSecEl.addEventListener('input', () => {
+    lastEdited = 'pace';
+    const v = parseInt(paceSecEl.value, 10);
+    if (!isNaN(v) && v > 59) paceSecEl.value = '59';
+    calculate();
+  });
+
+  paceSecEl.addEventListener('blur', () => {
+    const v = parseInt(paceSecEl.value, 10);
+    if (!isNaN(v)) paceSecEl.value = String(v).padStart(2, '0');
+  });
+
+  // ── Reset ────────────────────────────────────────────────────────────────────
+
+  function resetAll() {
+    speedEl.value   = '';
+    paceMinEl.value = '';
+    paceSecEl.value = '';
+    distEl.value    = '';
+    lastEdited = null;
+    clearPresets();
+    ['speed', 'pace', 'distance'].forEach(id => setCalculated(id, false));
+    timeEl.textContent = '—';
+    timeEl.classList.add('empty');
+    metaEl.textContent = '';
+  }
+</script>
+
+</body>
+</html>
