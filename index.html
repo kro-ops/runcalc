@@ -206,6 +206,30 @@
 
     .calculated .pace-sep { color: var(--purple-500); }
 
+    /* Time split */
+    .time-wrap {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .time-wrap input { text-align: center; }
+
+    #time-h   { flex: 0 0 2.5rem; padding-right: 0.25rem; }
+    #time-min { flex: 0 0 3rem;   padding-left: 0.25rem; padding-right: 0.25rem; }
+    #time-sec { flex: 0 0 3rem;   padding-left: 0.25rem; }
+
+    .time-sep {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--muted);
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .calculated .time-sep { color: var(--purple-500); }
+
     .unit {
       padding: 0 1rem;
       font-size: 0.78rem;
@@ -261,62 +285,11 @@
       color: #fff;
     }
 
-    /* ── Divider ───────────────────────────────────────────────────────────── */
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 1.5rem 0;
-    }
-
-    /* ── Result card ───────────────────────────────────────────────────────── */
-
-    .result-card {
-      background: linear-gradient(135deg, var(--purple-900) 0%, var(--purple-700) 100%);
-      border-radius: var(--radius-md);
-      padding: 1.375rem 1.5rem;
-      color: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      min-height: 5rem;
-    }
-
-    .result-left { flex: 1; }
-
-    .result-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      opacity: 0.65;
-    }
-
-    .result-value {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-top: 0.1rem;
-      line-height: 1;
-    }
-
-    .result-value.empty {
-      opacity: 0.25;
-      font-size: 1.75rem;
-    }
-
-    .result-meta {
-      font-size: 0.75rem;
-      opacity: 0.55;
-      margin-top: 0.35rem;
-    }
-
     /* ── Reset button ──────────────────────────────────────────────────────── */
 
     .reset-btn {
       width: 100%;
-      margin-top: 0.875rem;
+      margin-top: 1.25rem;
       padding: 0.875rem;
       background: transparent;
       border: 1.5px solid var(--border);
@@ -357,7 +330,7 @@
     </div>
     <div class="header-text">
       <h1>Løpekalkulator</h1>
-      <p>Fyll inn to felt — det tredje beregnes automatisk</p>
+      <p>Fyll inn to felt — resten beregnes automatisk</p>
     </div>
   </div>
 
@@ -410,16 +383,26 @@
       </div>
     </div>
 
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="result-card">
-    <div class="result-left">
-      <div class="result-label">Total tid</div>
-      <div class="result-value empty" id="result-time">—</div>
-      <div class="result-meta" id="result-meta"></div>
+    <div class="field" id="field-time">
+      <div class="field-label-row">
+        <label>Total tid</label>
+        <span class="calc-badge">beregnet</span>
+      </div>
+      <div class="input-row" id="row-time">
+        <div class="time-wrap">
+          <input type="number" id="time-h"   placeholder="0"  min="0" max="99"
+                 inputmode="numeric" autocomplete="off">
+          <span class="time-sep">:</span>
+          <input type="number" id="time-min" placeholder="00" min="0" max="59"
+                 inputmode="numeric" autocomplete="off">
+          <span class="time-sep">:</span>
+          <input type="number" id="time-sec" placeholder="00" min="0" max="59"
+                 inputmode="numeric" autocomplete="off">
+        </div>
+        <span class="unit">t : min : sek</span>
+      </div>
     </div>
+
   </div>
 
   <button class="reset-btn" onclick="resetAll()">Nullstill</button>
@@ -431,11 +414,12 @@
   const paceMinEl = document.getElementById('pace-min');
   const paceSecEl = document.getElementById('pace-sec');
   const distEl    = document.getElementById('distance');
-  const timeEl    = document.getElementById('result-time');
-  const metaEl    = document.getElementById('result-meta');
+  const timeHEl   = document.getElementById('time-h');
+  const timeMinEl = document.getElementById('time-min');
+  const timeSecEl = document.getElementById('time-sec');
 
-  let lastEdited    = null;
-  let activePreset  = null; // currently highlighted preset button
+  let lastEdited   = null;
+  let activePreset = null;
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -456,13 +440,29 @@
     else            { paceMinEl.value = String(min);     paceSecEl.value = String(sec).padStart(2, '0'); }
   }
 
-  function formatTime(totalMin) {
-    if (!isFinite(totalMin) || totalMin <= 0) return null;
-    const h = Math.floor(totalMin / 60);
-    const m = Math.floor(totalMin % 60);
-    const s = Math.round((totalMin - Math.floor(totalMin)) * 60);
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    return `${m}:${String(s).padStart(2, '0')}`;
+  function getTimeDecimal() {
+    const h   = parseInt(timeHEl.value,   10);
+    const min = parseInt(timeMinEl.value, 10);
+    const sec = parseInt(timeSecEl.value, 10);
+    const hOk   = !isNaN(h)   && h   >= 0;
+    const minOk = !isNaN(min) && min >= 0 && min < 60;
+    const secOk = !isNaN(sec) && sec >= 0 && sec < 60;
+    if (!hOk && !minOk && !secOk) return NaN;
+    return (hOk ? h : 0) * 60 + (minOk ? min : 0) + (secOk ? sec : 0) / 60;
+  }
+
+  function setTimeFromDecimal(totalMin) {
+    if (!isFinite(totalMin) || totalMin <= 0) {
+      timeHEl.value = ''; timeMinEl.value = ''; timeSecEl.value = '';
+      return;
+    }
+    const totalSec = Math.round(totalMin * 60);
+    const ss = totalSec % 60;
+    const mm = Math.floor(totalSec / 60) % 60;
+    const hh = Math.floor(totalSec / 3600);
+    timeHEl.value   = hh > 0 ? String(hh) : '';
+    timeMinEl.value = String(mm).padStart(2, '0');
+    timeSecEl.value = String(ss).padStart(2, '0');
   }
 
   function setCalculated(fieldId, isCalc) {
@@ -489,70 +489,103 @@
   }
 
   // ── Core calculation ─────────────────────────────────────────────────────────
+  //
+  // Tre uavhengige størrelser: tempo/fart, distanse, totaltid.
+  // To kjente → beregn den tredje.
+  //
+  // lastEdited = 'speed'    → konverter til tempo; beregn tid hvis dist kjent,
+  //                           eller dist hvis tid kjent
+  // lastEdited = 'pace'     → konverter til fart; beregn tid hvis dist kjent,
+  //                           eller dist hvis tid kjent
+  // lastEdited = 'distance' → beregn tid hvis tempo/fart kjent,
+  //                           eller tempo/fart hvis tid kjent
+  // lastEdited = 'time'     → beregn tempo/fart hvis dist kjent,
+  //                           eller dist hvis tempo/fart kjent
 
   function calculate() {
     const speedRaw = parseFloat(speedEl.value);
     const paceRaw  = getPaceDecimal();
+    const distRaw  = parseFloat(distEl.value);
+    const timeRaw  = getTimeDecimal();
 
     const hasSpeed = !isNaN(speedRaw) && speedRaw > 0;
     const hasPace  = !isNaN(paceRaw)  && paceRaw  > 0;
+    const hasDist  = !isNaN(distRaw)  && distRaw  > 0;
+    const hasTime  = !isNaN(timeRaw)  && timeRaw  > 0;
+
+    // Nullstill alle "beregnet"-markeringer
+    setCalculated('speed',    false);
+    setCalculated('pace',     false);
+    setCalculated('distance', false);
+    setCalculated('time',     false);
 
     if (lastEdited === 'speed') {
       if (hasSpeed) {
         setPaceFromDecimal(60 / speedRaw);
-        setCalculated('pace',  true);
-        setCalculated('speed', false);
+        setCalculated('pace', true);
+        if (hasDist) {
+          setTimeFromDecimal((60 / speedRaw) * distRaw);
+          setCalculated('time', true);
+        } else if (hasTime) {
+          distEl.value = (timeRaw * speedRaw / 60).toFixed(2);
+          setCalculated('distance', true);
+        }
       } else {
-        paceMinEl.value = '';
-        paceSecEl.value = '';
-        setCalculated('pace', false);
+        paceMinEl.value = ''; paceSecEl.value = '';
       }
-      setCalculated('distance', false);
 
     } else if (lastEdited === 'pace') {
       if (hasPace) {
         speedEl.value = (60 / paceRaw).toFixed(2);
         setCalculated('speed', true);
-        setCalculated('pace',  false);
+        if (hasDist) {
+          setTimeFromDecimal(paceRaw * distRaw);
+          setCalculated('time', true);
+        } else if (hasTime) {
+          distEl.value = (timeRaw / paceRaw).toFixed(2);
+          setCalculated('distance', true);
+        }
       } else {
         speedEl.value = '';
-        setCalculated('speed', false);
       }
-      setCalculated('distance', false);
 
     } else if (lastEdited === 'distance') {
-      setCalculated('distance', false);
-    }
+      const pace = hasPace ? paceRaw : (hasSpeed ? 60 / speedRaw : NaN);
+      if (isFinite(pace) && pace > 0 && hasDist) {
+        setTimeFromDecimal(pace * distRaw);
+        setCalculated('time', true);
+        if (!hasPace) { setPaceFromDecimal(pace); setCalculated('pace', true); }
+        if (!hasSpeed) { speedEl.value = (60 / pace).toFixed(2); setCalculated('speed', true); }
+      } else if (hasTime && hasDist) {
+        const newPace = timeRaw / distRaw;
+        setPaceFromDecimal(newPace);
+        setCalculated('pace', true);
+        speedEl.value = (60 / newPace).toFixed(2);
+        setCalculated('speed', true);
+      }
 
-    // ── Total time ────────────────────────────────────────────────────────────
-    const currentPace  = getPaceDecimal();
-    const currentSpeed = parseFloat(speedEl.value);
-    const currentDist  = parseFloat(distEl.value);
-
-    const paceOk  = !isNaN(currentPace)  && currentPace  > 0;
-    const distOk  = !isNaN(currentDist)  && currentDist  > 0;
-    const speedOk = !isNaN(currentSpeed) && currentSpeed > 0;
-
-    if (paceOk && distOk) {
-      timeEl.textContent = formatTime(currentPace * currentDist);
-      timeEl.classList.remove('empty');
-      const sp = speedOk ? currentSpeed.toFixed(1) : (60 / currentPace).toFixed(1);
-      metaEl.textContent = `${currentDist % 1 === 0 ? currentDist.toFixed(0) : currentDist} km · ${sp} km/t`;
-    } else {
-      timeEl.textContent = '—';
-      timeEl.classList.add('empty');
-      metaEl.textContent = '';
+    } else if (lastEdited === 'time') {
+      if (hasTime && hasDist) {
+        const newPace = timeRaw / distRaw;
+        setPaceFromDecimal(newPace);
+        setCalculated('pace', true);
+        speedEl.value = (60 / newPace).toFixed(2);
+        setCalculated('speed', true);
+      } else if (hasTime && (hasPace || hasSpeed)) {
+        const pace = hasPace ? paceRaw : 60 / speedRaw;
+        distEl.value = (timeRaw / pace).toFixed(2);
+        setCalculated('distance', true);
+      }
     }
   }
 
   // ── Event listeners ──────────────────────────────────────────────────────────
 
-  speedEl.addEventListener('input', () => { lastEdited = 'speed';    calculate(); });
+  speedEl.addEventListener('input', () => { lastEdited = 'speed'; calculate(); });
 
   distEl.addEventListener('input', () => {
     lastEdited = 'distance';
     clearPresets();
-    // Re-highlight if value matches a preset
     const v = parseFloat(distEl.value);
     document.querySelectorAll('.preset-btn').forEach(b => {
       if (Math.abs(parseFloat(b.dataset.km) - v) < 0.001) {
@@ -581,6 +614,36 @@
     if (!isNaN(v)) paceSecEl.value = String(v).padStart(2, '0');
   });
 
+  timeHEl.addEventListener('input', () => {
+    lastEdited = 'time';
+    calculate();
+  });
+
+  timeMinEl.addEventListener('input', () => {
+    lastEdited = 'time';
+    const v = parseInt(timeMinEl.value, 10);
+    if (!isNaN(v) && v > 59) timeMinEl.value = '59';
+    if (timeMinEl.value.length >= 2) timeSecEl.focus();
+    calculate();
+  });
+
+  timeSecEl.addEventListener('input', () => {
+    lastEdited = 'time';
+    const v = parseInt(timeSecEl.value, 10);
+    if (!isNaN(v) && v > 59) timeSecEl.value = '59';
+    calculate();
+  });
+
+  timeMinEl.addEventListener('blur', () => {
+    const v = parseInt(timeMinEl.value, 10);
+    if (!isNaN(v)) timeMinEl.value = String(v).padStart(2, '0');
+  });
+
+  timeSecEl.addEventListener('blur', () => {
+    const v = parseInt(timeSecEl.value, 10);
+    if (!isNaN(v)) timeSecEl.value = String(v).padStart(2, '0');
+  });
+
   // ── Reset ────────────────────────────────────────────────────────────────────
 
   function resetAll() {
@@ -588,12 +651,12 @@
     paceMinEl.value = '';
     paceSecEl.value = '';
     distEl.value    = '';
+    timeHEl.value   = '';
+    timeMinEl.value = '';
+    timeSecEl.value = '';
     lastEdited = null;
     clearPresets();
-    ['speed', 'pace', 'distance'].forEach(id => setCalculated(id, false));
-    timeEl.textContent = '—';
-    timeEl.classList.add('empty');
-    metaEl.textContent = '';
+    ['speed', 'pace', 'distance', 'time'].forEach(id => setCalculated(id, false));
   }
 </script>
 
